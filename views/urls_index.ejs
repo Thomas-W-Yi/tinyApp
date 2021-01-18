@@ -1,0 +1,25 @@
+<%- include('./partials/head.ejs', {title: 'TinyApp'}) %>
+<%- include('./partials/header.ejs') %>
+<main>
+    <div class="jumbotron">
+      <h3>My URLs</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope ='col'>Short URL</th>
+            <th scope='col'>Long URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (let urlKey in urlDatabase) { %>
+            <tr>
+              <td><%= urlKey %></td>
+              <td><%= urlDatabase[urlKey] %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+      </ul>
+    </div>
+</main>
+<%- include('./partials/footer.ejs') %>

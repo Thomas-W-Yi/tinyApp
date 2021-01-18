@@ -8,6 +8,7 @@
           <tr>
             <th scope ='col'>Short URL</th>
             <th scope='col'>Long URL</th>
+            <th scope='col'>Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -15,6 +16,7 @@
             <tr>
               <td><%= urlKey %></td>
               <td><%= urlDatabase[urlKey] %></td>
+              <td><form method="POST", action=<%= `/urls/${urlKey}/delete` %>><button type="submit">Delete</button></form></td>
             </tr>
           <% } %>
         </tbody>

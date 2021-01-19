@@ -1,5 +1,5 @@
 <%- include('./partials/head.ejs', {title: 'TinyApp'}) %>
-<%- include('./partials/header.ejs') %>
+<%- include('./partials/header.ejs', {user: cookies['username']})%>
 <main>
     <div class="jumbotron">
       <h3>My URLs</h3>

@@ -1,16 +1,20 @@
 <%- include('./partials/head.ejs', {title: 'TinyApp'}) %>
-<%-include('./partials/header.ejs', {user: cookies['username']})%>
+<%-include('./partials/header.ejs', {user: cookies['user_id']})%>
 
-<form action="/register" method="POST">
-  <div class="form-group">
-    <input type="email" name="email" placeholder="email address" />
+<main>
+  <div class="text-center">
+    <form action="/register" method="POST" class="justify-content-center">
+      <div class="form-group">
+        <input type="email" name="email" placeholder="email address" />
+      </div>
+      <div class="form-group">
+        <input type="password" name="password" placeholder="set password" />
+      </div>
+      <div class="form-group">
+        <button class="btn btn-primary">Register</button>
+      </div>
+    </form>
   </div>
-  <div class="form-group">
-    <input type="password" name="password" placeholder="set password" />
-  </div>
-  <div class="form-group">
-    <button class="btn btn-primary">Register</button>
-  </div>
-</form>
+</main>
 
 <%- include('./partials/footer.ejs') %>

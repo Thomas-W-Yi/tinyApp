@@ -1,7 +1,7 @@
 const checkEmail = (obj, email) => {
-  let result = false;
+  let result;
   for (let id in obj) {
-    obj[id].email === email ? (result = true) : null;
+    obj[id].email === email ? (result = id) : null;
   }
   return result;
 };

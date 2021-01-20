@@ -9,16 +9,17 @@ const cookieParser = require('cookie-parser');
 const generateRandomString = require('./util/random');
 const checkEmail = require('./util/checkEmail');
 const checkPass = require('./util/checkPass');
+const userID = require('./util/userID');
 
 const urlDatabase = {
   b2xVn2: 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
 };
 const users = {
-  'thomas.w.yee@gmail.com': {
-    name: 'Tom',
+  Xy: {
     email: 'thomas.w.yee@gmail.com',
     password: '123',
+    id: 'Xy',
   },
 };
 app.set('view engine', 'ejs');
@@ -29,7 +30,7 @@ app.use(cookieParser());
 // create /urls get route
 app.get('/urls', (req, res) => {
   console.log(req.cookies);
-  let cookies = req.cookies.email;
+  let cookies = req.cookies.user_id;
   let templateVars = {
     urlDatabase,
     cookies,
@@ -38,9 +39,15 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
+// this route leads to the page that shorten URLs
+app.get('/urls/new', (req, res) => {
+  let cookies = req.cookies.user_id;
+  res.render('urls_new', { users, cookies });
+});
+
 // create a /urls/:id get route
 app.get('/urls/:id', (req, res) => {
-  let cookies = req.cookies.email;
+  let cookies = req.cookies.user_id;
   let id = req.params.id;
   res.render('urls_show', {
     cookies: cookies,
@@ -50,17 +57,11 @@ app.get('/urls/:id', (req, res) => {
   });
 });
 
-// this route leads to the page that shorten URLs
-app.get('/urls/new', (req, res) => {
-  let cookies = req.cookies.email;
-  res.render('urls_new', { users, cookies });
-});
-
 // this post route generates new short: long URL value pair in our urlDatabase
 app.post('/urls', (req, res) => {
   let shortURL = generateRandomString();
   !urlDatabase[shortURL] ? (urlDatabase[shortURL] = req.body.longURL) : null;
-  res.redirect(`/u/${shortURL}`);
+  res.redirect(`/urls`);
 });
 
 // this post route delete url value pair in our urlDatabase
@@ -84,16 +85,15 @@ app.get('/u/:shortURL', (req, res) => {
 
 // get route for register
 app.get('/register', (req, res) => {
-  let cookies = req.cookies.email;
+  let cookies = req.cookies.user_id;
   res.render('urls_register', { users, cookies });
 });
 
 // post route for register
 app.post('/register', (req, res) => {
   let password = req.body.password,
-    email = req.body.email,
-    name = req.body.name;
-  if (!password || !email || !name) {
+    email = req.body.email;
+  if (!password || !email) {
     res.status(400).send('<h3>Please fill required field</h3>');
   } else if (checkEmail(users, req.body.email)) {
     res
@@ -102,14 +102,16 @@ app.post('/register', (req, res) => {
         '<h3>Email has already been registered, please use another email!</h3>'
       );
   } else {
-    users[email] = { name, email, password };
+    let id = userID();
+    users[id] = { email, password, id };
+    console.log(users);
     res.redirect('/login');
   }
 });
 
 // get route for login page
 app.get('/login', (req, res) => {
-  let cookies = req.cookies.email;
+  let cookies = req.cookies.user_id;
   res.render('urls_login', { users, cookies });
 });
 // post route for login and set cookie
@@ -118,19 +120,19 @@ app.post('/login', (req, res) => {
   let incomingPass = req.body.password;
   if (checkEmail(users, incomingEmail)) {
     if (checkPass(users, incomingPass)) {
-      res.cookie('email', incomingEmail);
+      res.cookie('user_id', checkEmail(users, incomingEmail));
       res.redirect('/urls');
     } else {
-      res.redirect('/login');
+      res.status(403).send();
     }
   } else {
-    res.redirect('/login');
+    res.status(403).send('email is not registered');
   }
 });
 
 //post route for logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('email');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 

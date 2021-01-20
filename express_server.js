@@ -7,17 +7,16 @@ const cookieParser = require('cookie-parser');
 
 // import utility functions from util folder
 const generateRandomString = require('./util/random');
-const randomID = require('./util/userID');
 const checkEmail = require('./util/checkEmail');
+const checkPass = require('./util/checkPass');
 
 const urlDatabase = {
   b2xVn2: 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
 };
-const cookies = {};
 const users = {
-  y1: {
-    id: 'yi',
+  'thomas.w.yee@gmail.com': {
+    name: 'Tom',
     email: 'thomas.w.yee@gmail.com',
     password: '123',
   },
@@ -29,6 +28,8 @@ app.use(cookieParser());
 
 // create /urls get route
 app.get('/urls', (req, res) => {
+  console.log(req.cookies);
+  let cookies = req.cookies.email;
   let templateVars = {
     urlDatabase,
     cookies,
@@ -39,8 +40,11 @@ app.get('/urls', (req, res) => {
 
 // create a /urls/:id get route
 app.get('/urls/:id', (req, res) => {
+  let cookies = req.cookies.email;
   let id = req.params.id;
   res.render('urls_show', {
+    cookies: cookies,
+    users: users,
     shortURL: id,
     longURL: urlDatabase[id],
   });
@@ -48,7 +52,8 @@ app.get('/urls/:id', (req, res) => {
 
 // this route leads to the page that shorten URLs
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  let cookies = req.cookies.email;
+  res.render('urls_new', { users, cookies });
 });
 
 // this post route generates new short: long URL value pair in our urlDatabase
@@ -77,27 +82,19 @@ app.get('/u/:shortURL', (req, res) => {
   res.redirect(urlDatabase[req.params.shortURL]);
 });
 
-// post route for login and set cookie
-app.post('/login', (req, res) => {
-  res.redirect('/register');
-});
-
-//post route for logout
-app.post('/logout', (req, res) => {
-  delete users[cookies.user_id];
-  res.redirect('/register');
-});
-
 // get route for register
 app.get('/register', (req, res) => {
+  let cookies = req.cookies.email;
   res.render('urls_register', { users, cookies });
 });
 
 // post route for register
 app.post('/register', (req, res) => {
-  console.log(req.body, checkEmail(users, req.body.email));
-  if (!req.body.password || !req.body.email) {
-    res.status(400).send('<h3>Please fill your email and password</h3>');
+  let password = req.body.password,
+    email = req.body.email,
+    name = req.body.name;
+  if (!password || !email || !name) {
+    res.status(400).send('<h3>Please fill required field</h3>');
   } else if (checkEmail(users, req.body.email)) {
     res
       .status(400)
@@ -105,13 +102,36 @@ app.post('/register', (req, res) => {
         '<h3>Email has already been registered, please use another email!</h3>'
       );
   } else {
-    let id = randomID();
-    users[id] = { id: id, email: req.body.email, password: req.body.password };
-    cookies['user_id'] = id;
-    res.cookie('user_id', id);
-    console.log(users, cookies);
-    res.redirect('/urls');
+    users[email] = { name, email, password };
+    res.redirect('/login');
   }
+});
+
+// get route for login page
+app.get('/login', (req, res) => {
+  let cookies = req.cookies.email;
+  res.render('urls_login', { users, cookies });
+});
+// post route for login and set cookie
+app.post('/login', (req, res) => {
+  let incomingEmail = req.body.email;
+  let incomingPass = req.body.password;
+  if (checkEmail(users, incomingEmail)) {
+    if (checkPass(users, incomingPass)) {
+      res.cookie('email', incomingEmail);
+      res.redirect('/urls');
+    } else {
+      res.redirect('/login');
+    }
+  } else {
+    res.redirect('/login');
+  }
+});
+
+//post route for logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('email');
+  res.redirect('/urls');
 });
 
 app.listen(PORT, () => {

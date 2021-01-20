@@ -12,10 +12,10 @@
           </tr>
         </thead>
         <tbody>
-          <% for (let urlKey in urlDatabase) { %>
+          <% for (let urlKey in database) { %>
             <tr>
               <td><%= urlKey %></td>
-              <td><%= urlDatabase[urlKey] %></td>
+              <td><%= database[urlKey] %></td>
               <td><form method="GET", action=<%= `/urls/${urlKey}` %>><button type="submit">Edit</button></form></td>
               <td><form method="POST", action=<%= `/urls/${urlKey}/delete` %>><button type="submit">Delete</button></form></td>
             </tr>

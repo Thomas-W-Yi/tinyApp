@@ -4,12 +4,12 @@
       <div class="card-header"></div>
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <p class="card-text">Short URL: <a href="/u/<%= key %>"><%= key %></a></p>
       </div>
     <div class="card-footer text-muted"></div>
       <div class="card-body">
         <h4 class="card-title">Edit</h4>
-        <form action=<%= `/urls/${shortURL}` %> method="POST">
+        <form action=<%= `/urls/${key}` %> method="POST">
           <label for="">New URL:</label><input type="text" placeholder="https://" name="longURL"><button type="submit">Submit</button>
         </form>
       </div>

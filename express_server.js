@@ -10,10 +10,11 @@ const generateRandomString = require('./util/random');
 const checkEmail = require('./util/checkEmail');
 const checkPass = require('./util/checkPass');
 const userID = require('./util/userID');
+const urlsForUser = require('./util/urlsForUser');
 
 const urlDatabase = {
-  b2xVn2: 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com',
+  b2xVn2: { longURL: 'http://www.lighthouselabs.ca', userID: 'Xy' },
+  '9sm5xK': { longURL: 'http://www.google.com', userID: 'Xy' },
 };
 const users = {
   Xy: {
@@ -29,58 +30,93 @@ app.use(cookieParser());
 
 // create /urls get route
 app.get('/urls', (req, res) => {
-  console.log(req.cookies);
-  let cookies = req.cookies.user_id;
-  let templateVars = {
-    urlDatabase,
-    cookies,
-    users,
-  };
-  res.render('urls_index', templateVars);
+  let cookies = req.cookies.user_id,
+    database = urlsForUser(urlDatabase, cookies),
+    keys = Object.keys(database);
+  console.log(cookies, database, keys);
+  if (keys.length > 0) {
+    let templateVars = {
+      database,
+      cookies,
+      users,
+    };
+    res.render('urls_index', templateVars);
+  } else if (cookies) {
+    res.redirect('/urls/new');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 // this route leads to the page that shorten URLs
 app.get('/urls/new', (req, res) => {
   let cookies = req.cookies.user_id;
-  res.render('urls_new', { users, cookies });
+  if (cookies) {
+    res.render('urls_new', { users, cookies });
+  } else {
+    res.redirect('/login');
+  }
 });
 
 // create a /urls/:id get route
 app.get('/urls/:id', (req, res) => {
   let cookies = req.cookies.user_id;
-  let id = req.params.id;
-  res.render('urls_show', {
-    cookies: cookies,
-    users: users,
-    shortURL: id,
-    longURL: urlDatabase[id],
-  });
+  let key = req.params.id;
+  let database = urlsForUser(urlDatabase, cookies);
+  console.log(cookies, key, database);
+  if (database[key]) {
+    let longURL = database[key];
+    res.render('urls_show', {
+      cookies,
+      users,
+      key,
+      longURL,
+    });
+  } else {
+    res.redirect('/login');
+  }
 });
 
 // this post route generates new short: long URL value pair in our urlDatabase
 app.post('/urls', (req, res) => {
-  let shortURL = generateRandomString();
-  !urlDatabase[shortURL] ? (urlDatabase[shortURL] = req.body.longURL) : null;
+  let shortURL = generateRandomString(),
+    userID = req.cookies.user_id,
+    longURL = req.body.longURL;
+  urlDatabase[shortURL] = { longURL, userID };
   res.redirect(`/urls`);
 });
 
 // this post route delete url value pair in our urlDatabase
-app.post('/urls/:shortURL/delete', (req, res) => {
-  console.log(req.params.shortURL);
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
+app.post('/urls/:id/delete', (req, res) => {
+  let key = req.params.id,
+    cookies = req.cookies.user_id,
+    database = urlsForUser(urlDatabase, cookies);
+  console.log(cookies, database, key);
+  if (database[key]) {
+    delete urlDatabase[key];
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 // this post route updates the long URLs in our urlDatabase
 app.post('/urls/:id', (req, res) => {
-  console.log(req.params.id, req.body.longURL);
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect('/urls');
+  let cookies = req.cookies.user_id,
+    database = urlsForUser(urlDatabase, cookies),
+    key = req.params.id;
+  console.log(cookies, database, key);
+  if (database[key]) {
+    urlDatabase[req.params.id].longURL = req.body.longURL;
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 // this get route takes a short url as parameter and redirect to the long url website
 app.get('/u/:shortURL', (req, res) => {
-  res.redirect(urlDatabase[req.params.shortURL]);
+  res.redirect(urlDatabase[req.params.shortURL].longURL);
 });
 
 // get route for register
@@ -133,6 +169,7 @@ app.post('/login', (req, res) => {
 //post route for logout
 app.post('/logout', (req, res) => {
   res.clearCookie('user_id');
+  res.clearCookie('username');
   res.redirect('/urls');
 });
 

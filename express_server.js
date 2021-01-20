@@ -8,13 +8,20 @@ const cookieParser = require('cookie-parser');
 // import utility functions from util folder
 const generateRandomString = require('./util/random');
 const randomID = require('./util/userID');
+const checkEmail = require('./util/checkEmail');
 
 const urlDatabase = {
   b2xVn2: 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
 };
 const cookies = {};
-const users = {};
+const users = {
+  y1: {
+    id: 'yi',
+    email: 'thomas.w.yee@gmail.com',
+    password: '123',
+  },
+};
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -88,12 +95,23 @@ app.get('/register', (req, res) => {
 
 // post route for register
 app.post('/register', (req, res) => {
-  let id = randomID();
-  users[id] = { id: id, email: req.body.email, password: req.body.password };
-  cookies['user_id'] = id;
-  res.cookie('user_id', id);
-  console.log(users, cookies);
-  res.redirect('/urls');
+  console.log(req.body, checkEmail(users, req.body.email));
+  if (!req.body.password || !req.body.email) {
+    res.status(400).send('<h3>Please fill your email and password</h3>');
+  } else if (checkEmail(users, req.body.email)) {
+    res
+      .status(400)
+      .send(
+        '<h3>Email has already been registered, please use another email!</h3>'
+      );
+  } else {
+    let id = randomID();
+    users[id] = { id: id, email: req.body.email, password: req.body.password };
+    cookies['user_id'] = id;
+    res.cookie('user_id', id);
+    console.log(users, cookies);
+    res.redirect('/urls');
+  }
 });
 
 app.listen(PORT, () => {

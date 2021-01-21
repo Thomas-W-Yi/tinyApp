@@ -26,8 +26,8 @@
 
       <% } else { %>
       <form action="/logout" method="POST">
-        <h4>Logged In As:<%= users[cookies].email%></h4>
-        <button class="btn">Logout</button>
+        <p>Logged In As:<%= users[cookies].email%></p>
+        <button class="btn btn-outline-dark">Logout</button>
       </form>
     </div>
     <% } %>

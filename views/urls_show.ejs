@@ -3,14 +3,22 @@
 <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %></h5>
+        <h5 class="card-title">TinyURL for: <a href="<% longURL %>"><%= longURL %></a></h5>
         <p class="card-text">Short URL: <a href="/u/<%= key %>"><%= key %></a></p>
+        <%if(urlDatabase[key].everyVisit){%>
+          <p>Total Visit: <%= urlDatabase[key].totalVisit %></p>
+        <p>Total Visitor: <%= urlDatabase[key].totalVisitor %></p>
+        <% for (let obj of urlDatabase[key].everyVisit) {%>
+        <p>Visits: timestamp(<%=obj.timeStamp%>), visitor_id(<%=obj.visitor_id%>)</p>
+        <% } %>
+        <%}%>
+        
       </div>
     <div class="card-footer text-muted"></div>
       <div class="card-body">
         <h4 class="card-title">Edit</h4>
-        <form action=<%= `/urls/${key}` %> method="POST">
-          <label for="">New URL:</label><input type="text" placeholder="https://" name="longURL"><button type="submit">Submit</button>
+        <form action=<%= `/urls/${key}?_method=PUT` %> method="POST">
+          <label for="">New URL:</label><input type="text" placeholder="https://" name="longURL"><button type="submit" class="btn btn-outline-primary">Submit</button>
         </form>
       </div>
   </div>

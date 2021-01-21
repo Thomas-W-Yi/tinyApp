@@ -5,6 +5,7 @@ const PORT = 8080;
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override');
 
 // import utility functions from helper
 const {
@@ -14,8 +15,18 @@ const {
 } = require('./helpers');
 
 const urlDatabase = {
-  b2xVn2: { longURL: 'http://www.lighthouselabs.ca', userID: 'Xy' },
-  '9sm5xK': { longURL: 'http://www.google.com', userID: 'Xy' },
+  b2xVn2: {
+    longURL: 'http://www.lighthouselabs.ca',
+    userID: 'Xyxyxy',
+    totalVisit: 0,
+  },
+  Bsm5xK: {
+    longURL: 'http://www.google.com',
+    userID: 'Xyxyxy',
+    totalVisits: 0,
+    totalVisitors: 0,
+    everyVisit: [{ timeStamp: 0, visitor_id: 0 }],
+  },
 };
 const users = {};
 app.set('view engine', 'ejs');
@@ -27,6 +38,7 @@ app.use(
     keys: ['super secret'],
   })
 );
+app.use(methodOverride('_method'));
 
 // create /urls get route
 app.get('/urls', (req, res) => {
@@ -57,7 +69,7 @@ app.get('/urls/new', (req, res) => {
   }
 });
 
-// create a /urls/:id get route
+// get route for the edit page
 app.get('/urls/:id', (req, res) => {
   let cookies = req.session.user_id;
   let key = req.params.id;
@@ -69,6 +81,7 @@ app.get('/urls/:id', (req, res) => {
       users,
       key,
       longURL,
+      urlDatabase,
     });
   } else {
     res.redirect('/login');
@@ -80,12 +93,15 @@ app.post('/urls', (req, res) => {
   let shortURL = generateRandomString(),
     userID = req.session.user_id,
     longURL = req.body.longURL;
-  urlDatabase[shortURL] = { longURL, userID };
+  urlDatabase[shortURL] = {
+    longURL,
+    userID,
+  };
   res.redirect(`/urls`);
 });
 
 // this post route delete url value pair in our urlDatabase
-app.post('/urls/:id/delete', (req, res) => {
+app.post('/urls/:id', (req, res) => {
   let key = req.params.id,
     cookies = req.session.user_id,
     database = urlsForUser(urlDatabase, cookies);
@@ -97,13 +113,14 @@ app.post('/urls/:id/delete', (req, res) => {
   }
 });
 
-// this post route updates the long URLs in our urlDatabase
-app.post('/urls/:id', (req, res) => {
+// this PUT route updates the long URLs in our urlDatabase
+app.put('/urls/:id', (req, res) => {
   let cookies = req.session.user_id,
     database = urlsForUser(urlDatabase, cookies),
     key = req.params.id;
-  if (database[key]) {
-    urlDatabase[req.params.id].longURL = req.body.longURL;
+  if (urlDatabase[key]) {
+    urlDatabase[key].longURL = req.body.longURL;
+    database[key] = req.body.longURL;
     res.redirect('/urls');
   } else {
     res.redirect('/login');
@@ -112,6 +129,20 @@ app.post('/urls/:id', (req, res) => {
 
 // this get route takes a short url as parameter and redirect to the long url website
 app.get('/u/:shortURL', (req, res) => {
+  let shortURL = req.params.shortURL;
+  if (!req.session.unique_id) {
+    let visitor_id = generateRandomString(),
+      timeStamp = new Date().toLocaleString();
+    urlDatabase[shortURL].totalVisit = 1;
+    urlDatabase[shortURL].totalVisitor = 1;
+    req.session.unique_id = visitor_id;
+    urlDatabase[shortURL].everyVisit = [{ timeStamp, visitor_id }];
+  } else {
+    urlDatabase[shortURL].totalVisit++;
+    let timeStamp = new Date().toLocaleString(),
+      visitor_id = req.session.unique_id;
+    urlDatabase[shortURL].everyVisit.push({ timeStamp, visitor_id });
+  }
   res.redirect(urlDatabase[req.params.shortURL].longURL);
 });
 
@@ -137,8 +168,8 @@ app.post('/register', (req, res) => {
   } else {
     let id = generateRandomString();
     users[id] = { email, hashedPassword, id };
-    console.log(users);
-    res.redirect('/login');
+    req.session.user_id = id;
+    res.redirect('/urls');
   }
 });
 
@@ -157,10 +188,10 @@ app.post('/login', (req, res) => {
       req.session.user_id = userID;
       res.redirect('/urls');
     } else {
-      res.status(403).send();
+      res.status(403).send('You password is incorrect!');
     }
   } else {
-    res.status(403).send('email is not registered');
+    res.status(403).send('Email is not registered');
   }
 });
 

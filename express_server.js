@@ -134,7 +134,6 @@ app.get('/u/:shortURL', (req, res) => {
   urlDatabase[shortURL].totalVisits
     ? urlDatabase[shortURL].totalVisits++
     : (urlDatabase[shortURL].totalVisits = 1);
-  console.log(req.session.unique_id, req.session[shortURL]);
   if (!req.session.unique_id && !req.session[shortURL]) {
     !urlDatabase[shortURL].totalVisitors
       ? (urlDatabase[shortURL].totalVisitors = 1)
@@ -147,7 +146,6 @@ app.get('/u/:shortURL', (req, res) => {
       : urlDatabase[shortURL].totalVisitors++;
     req.session[shortURL] = shortURL;
   }
-  console.log(req.session.unique_id, req.session[shortURL]);
   res.redirect(urlDatabase[req.params.shortURL].longURL);
 });
 

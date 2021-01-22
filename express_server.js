@@ -96,12 +96,12 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls`);
 });
 
-// this post route delete url value pair in our urlDatabase
-app.post('/urls/:id', (req, res) => {
+// this delete route delete url value pair in our urlDatabase
+app.delete('/urls/:id', (req, res) => {
   let key = req.params.id,
     cookies = req.session.user_id,
     database = urlsForUser(urlDatabase, cookies);
-  if (database[key]) {
+  if (database.length > 0) {
     delete urlDatabase[key];
     res.redirect('/urls');
   } else {
@@ -125,30 +125,29 @@ app.put('/urls/:id', (req, res) => {
 
 // this get route takes a short url as parameter and redirect to the long url website
 app.get('/u/:shortURL', (req, res) => {
-  let shortURL = req.params.shortURL;
+  let shortURL = req.params.shortURL,
+    visitor_id = generateRandomString(),
+    timeStamp = new Date().toLocaleString();
+  urlDatabase[shortURL].everyVisit
+    ? urlDatabase[shortURL].everyVisit.push({ timeStamp, visitor_id })
+    : (urlDatabase[shortURL].everyVisit = [{ timeStamp, visitor_id }]);
   urlDatabase[shortURL].totalVisits
     ? urlDatabase[shortURL].totalVisits++
     : (urlDatabase[shortURL].totalVisits = 1);
-  if (!req.session.unique_id) {
-    let visitor_id = generateRandomString(),
-      timeStamp = new Date().toLocaleString();
-    urlDatabase[shortURL].totalVisitors
-      ? urlDatabase[shortURL].totalVisitors++
-      : (urlDatabase[shortURL].totalVisitors = 1);
+  console.log(req.session.unique_id, req.session[shortURL]);
+  if (!req.session.unique_id && !req.session[shortURL]) {
+    !urlDatabase[shortURL].totalVisitors
+      ? (urlDatabase[shortURL].totalVisitors = 1)
+      : urlDatabase[shortURL].totalVisitors++;
     req.session.unique_id = visitor_id;
-    urlDatabase[shortURL].everyVisit
-      ? urlDatabase[shortURL].everyVisit.push({ timeStamp, visitor_id })
-      : (urlDatabase[shortURL].everyVisit = [{ timeStamp, visitor_id }]);
-  } else {
-    let timeStamp = new Date().toLocaleString(),
-      visitor_id = req.session.unique_id;
-    urlDatabase[shortURL].totalVisitors
-      ? urlDatabase[shortURL].totalVisitors++
-      : (urlDatabase[shortURL].totalVisitors = 1);
-    urlDatabase[shortURL].everyVisit
-      ? urlDatabase[shortURL].everyVisit.push({ timeStamp, visitor_id })
-      : (urlDatabase[shortURL].everyVisit = [{ timeStamp, visitor_id }]);
+    req.session[shortURL] = shortURL;
+  } else if (req.session.unique_id && !req.session[shortURL]) {
+    !urlDatabase[shortURL].totalVisitors
+      ? (urlDatabase[shortURL].totalVisitors = 1)
+      : urlDatabase[shortURL].totalVisitors++;
+    req.session[shortURL] = shortURL;
   }
+  console.log(req.session.unique_id, req.session[shortURL]);
   res.redirect(urlDatabase[req.params.shortURL].longURL);
 });
 

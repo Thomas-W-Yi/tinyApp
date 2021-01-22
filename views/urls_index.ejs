@@ -29,7 +29,7 @@
                 <td><%= obj.totalVisitors %></td>
               <%}%>
                 <td><form method="GET", action=<%= `/urls/${obj.shortURL}` %>><button type="submit" class="btn btn-outline-primary">Edit</button></form></td>
-              <td><form method="POST", action=<%= `/urls/${obj.short}?_DELETE` %>><button type="submit"class="btn btn-outline-danger">Delete</button></form></td>
+              <td><form method="POST", action=<%= `/urls/${obj.shortURL}?_method=DELETE` %>><button type="submit"class="btn btn-outline-danger">Delete</button></form></td>
             </tr>
           <% } %>
         </tbody>

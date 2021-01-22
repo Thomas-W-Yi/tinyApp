@@ -19,11 +19,19 @@ const generateRandomString = () => {
 };
 
 const urlsForUser = (database, id) => {
-  let output = {};
+  let result = [];
   for (let key in database) {
-    database[key].userID === id ? (output[key] = database[key].longURL) : null;
+    let output = {};
+    if (database[key].userID === id) {
+      output.shortURL = key;
+      output.longURL = database[key].longURL;
+      output.dateCreated = database[key].dateCreated;
+      output.totalVisits = database[key].totalVisits;
+      output.totalVisitors = database[key].totalVisitors;
+      result.push(output);
+    }
   }
-  return output;
+  return result;
 };
 
 module.exports = { getUserByEmail, generateRandomString, urlsForUser };

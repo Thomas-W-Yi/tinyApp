@@ -15,14 +15,10 @@ const {
 } = require('./helpers');
 
 const urlDatabase = {
-  b2xVn2: {
-    longURL: 'http://www.lighthouselabs.ca',
-    userID: 'Xyxyxy',
-    totalVisit: 0,
-  },
   Bsm5xK: {
     longURL: 'http://www.google.com',
     userID: 'Xyxyxy',
+    dateCreated: '',
     totalVisits: 0,
     totalVisitors: 0,
     everyVisit: [{ timeStamp: 0, visitor_id: 0 }],
@@ -43,9 +39,8 @@ app.use(methodOverride('_method'));
 // create /urls get route
 app.get('/urls', (req, res) => {
   let cookies = req.session.user_id,
-    database = urlsForUser(urlDatabase, cookies),
-    keys = Object.keys(database);
-  if (keys.length > 0) {
+    database = urlsForUser(urlDatabase, cookies);
+  if (database.length > 0) {
     let templateVars = {
       database,
       cookies,
@@ -73,9 +68,8 @@ app.get('/urls/new', (req, res) => {
 app.get('/urls/:id', (req, res) => {
   let cookies = req.session.user_id;
   let key = req.params.id;
-  let database = urlsForUser(urlDatabase, cookies);
-  if (database[key]) {
-    let longURL = database[key];
+  if (cookies) {
+    let longURL = urlDatabase[key].longURL;
     res.render('urls_show', {
       cookies,
       users,
@@ -91,11 +85,13 @@ app.get('/urls/:id', (req, res) => {
 // this post route generates new short: long URL value pair in our urlDatabase
 app.post('/urls', (req, res) => {
   let shortURL = generateRandomString(),
+    dateCreated = new Date().toLocaleDateString(),
     userID = req.session.user_id,
     longURL = req.body.longURL;
   urlDatabase[shortURL] = {
     longURL,
     userID,
+    dateCreated,
   };
   res.redirect(`/urls`);
 });
@@ -130,18 +126,28 @@ app.put('/urls/:id', (req, res) => {
 // this get route takes a short url as parameter and redirect to the long url website
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
+  urlDatabase[shortURL].totalVisits
+    ? urlDatabase[shortURL].totalVisits++
+    : (urlDatabase[shortURL].totalVisits = 1);
   if (!req.session.unique_id) {
     let visitor_id = generateRandomString(),
       timeStamp = new Date().toLocaleString();
-    urlDatabase[shortURL].totalVisit = 1;
-    urlDatabase[shortURL].totalVisitor = 1;
+    urlDatabase[shortURL].totalVisitors
+      ? urlDatabase[shortURL].totalVisitors++
+      : (urlDatabase[shortURL].totalVisitors = 1);
     req.session.unique_id = visitor_id;
-    urlDatabase[shortURL].everyVisit = [{ timeStamp, visitor_id }];
+    urlDatabase[shortURL].everyVisit
+      ? urlDatabase[shortURL].everyVisit.push({ timeStamp, visitor_id })
+      : (urlDatabase[shortURL].everyVisit = [{ timeStamp, visitor_id }]);
   } else {
-    urlDatabase[shortURL].totalVisit++;
     let timeStamp = new Date().toLocaleString(),
       visitor_id = req.session.unique_id;
-    urlDatabase[shortURL].everyVisit.push({ timeStamp, visitor_id });
+    urlDatabase[shortURL].totalVisitors
+      ? urlDatabase[shortURL].totalVisitors++
+      : (urlDatabase[shortURL].totalVisitors = 1);
+    urlDatabase[shortURL].everyVisit
+      ? urlDatabase[shortURL].everyVisit.push({ timeStamp, visitor_id })
+      : (urlDatabase[shortURL].everyVisit = [{ timeStamp, visitor_id }]);
   }
   res.redirect(urlDatabase[req.params.shortURL].longURL);
 });

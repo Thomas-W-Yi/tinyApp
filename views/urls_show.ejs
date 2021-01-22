@@ -5,9 +5,10 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <a href="<% longURL %>"><%= longURL %></a></h5>
         <p class="card-text">Short URL: <a href="/u/<%= key %>"><%= key %></a></p>
+        <p>Date Created: <%= urlDatabase[key].dateCreated%></p>
         <%if(urlDatabase[key].everyVisit){%>
-          <p>Total Visit: <%= urlDatabase[key].totalVisit %></p>
-        <p>Total Visitor: <%= urlDatabase[key].totalVisitor %></p>
+          <p>Total Visit: <%= urlDatabase[key].totalVisits %></p>
+        <p>Total Visitor: <%= urlDatabase[key].totalVisitors %></p>
         <% for (let obj of urlDatabase[key].everyVisit) {%>
         <p>Visits: timestamp(<%=obj.timeStamp%>), visitor_id(<%=obj.visitor_id%>)</p>
         <% } %>

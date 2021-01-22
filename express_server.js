@@ -36,19 +36,23 @@ app.use(
 );
 app.use(methodOverride('_method'));
 
+// root route
+app.get('/', (req, res) => {
+  let cookies = req.session.user_id;
+  cookies ? res.redirect('/urls') : res.redirect('/login');
+});
+
 // create /urls get route
 app.get('/urls', (req, res) => {
   let cookies = req.session.user_id,
     database = urlsForUser(urlDatabase, cookies);
-  if (database.length > 0) {
+  if (cookies) {
     let templateVars = {
       database,
       cookies,
       users,
     };
     res.render('urls_index', templateVars);
-  } else if (cookies) {
-    res.redirect('/urls/new');
   } else {
     res.redirect('/login');
   }
